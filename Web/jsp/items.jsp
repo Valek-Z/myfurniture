@@ -9,19 +9,24 @@
 
   List <Goods> goods = (List <Goods> ) request.getAttribute("listGoods");
  
+
+ out.println( "  <div class=\"hinter\">");
+ 
    out.println( "  <form class=\"FormBasket\"  >"); 
    
     if ( goods != null && !goods.isEmpty() ) {	
     	
-     out.println("<p> <span class=\"name\" >" + "Name furniture  - price" + " </span> </p>");	
+     out.println("<p> <span class=\"name\" >" + "Name furniture  - price :" + " </span> </p>");	
      
 	  for (Goods g : goods) {	
 		  
-	 	 out.println("<p> <input class=\"checkbox\"  id="+g.getName() +" type=\"checkbox\"  name=\"items\" value=\"" 
-	     +g.getArticle() + "\">" +"<label for=" +g.getName()    +" \">" +g.getName() + " - " + g.getPrice() +" </label> </p> " );
+	 	 out.print("<p> <input class = \"checkbox\" type = \"checkbox\"  name = \"item\"  id = \"" + g.getName() + "\" value = \"" 
+	     +g.getArticle() + "\">" +"<label for= \"" + g.getName()    +"\">" +g.getName().toString() + " - " + g.getPrice() +" </label> </p> " );
 	    		 
 		 }	
 	  out.println("  <input class=\"Basket\"  id=\"Basket\" type = \"button\" value = \"To Basket\" /> </form> ");  
+	    		 
+	 out.println( "   <div class=\"hint\"> When you press the button \"To Basket\", you will be redirected to the purchase confirmation page. <br> </div> </div> ");
 	 } 
     
    else out.println("<div class=\"Sorry\">\n"
