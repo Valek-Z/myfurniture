@@ -1,8 +1,9 @@
 package com.shop.servlets;
 
-import com.shop.servise.ReadFile;
+import java.io.IOException;
 
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebListener;
@@ -10,7 +11,8 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+
+import com.shop.servise.ReadFile;
 
 
 /**
@@ -28,7 +30,7 @@ public class Items extends HttpServlet implements ServletContextListener {
 	public Items ( ) {
 		
 		super ( );
-		System.out.println ( "  To start the app create csv file in the Tomcat / data server folder, fill up product catalog in such a sequence (name, article, price) using  comma - , - ");
+		
 		
 	}
 	
@@ -39,12 +41,19 @@ public class Items extends HttpServlet implements ServletContextListener {
 	 */
 	
 	protected void doGet ( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
-			                                                                                         IOException {
-		
-		ReadFile.getInstance ( );
-		request.setAttribute ( "listGoods", ReadFile.readGoods ( ) );
+			                                                                                         IOException {			
+			
+		request.setAttribute ( "listGoods", ReadFile.getInstance().getListgoods() );
 		RequestDispatcher dispatcher = request.getRequestDispatcher ( "/jsp/items.jsp" );
 		dispatcher.forward ( request, response );
+		
+	}
+	@Override
+	public void contextInitialized(ServletContextEvent event) {
+		
+		System.out.println ( "  To start the app create csv file in the Tomcat / data server folder, fill up product catalog in such a sequence (name, article, price) using  comma - , - ");
+	
+		ReadFile.getInstance().startReadFile();
 		
 	}
 	

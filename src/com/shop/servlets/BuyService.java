@@ -1,23 +1,25 @@
 package com.shop.servlets;
 
-import com.shop.entity.Goods;
-import com.shop.servise.ReadFile;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+
+import com.shop.entity.Goods;
+import com.shop.servise.ReadFile;
 
 /**
  * Servlet implementation class buyService
@@ -42,22 +44,53 @@ public class BuyService extends HttpServlet {
 			                                                                                          IOException {
 		
 		String webAppbase = System.getProperty ( "catalina.base" );
-		String dir = webAppbase + "/data/";
-		
-		ReadFile.getInstance ( );
-		
+		String dir = webAppbase + "/data/";	
+			
 		String[] articleToFile = request.getParameterValues ( "goodsToBuy" );
 		
+		if ( articleToFile.length != 0 ) {				
 		
-		if ( articleToFile != null ) {
-			Set < Long > goodArticle =
-					ReadFile.readGoods ( ).stream ( ).map ( Goods :: getArticle ).collect ( Collectors.toSet ( ) );
-			List < String > goodsToFile =
-					Arrays.asList ( articleToFile ).stream ( ).filter ( g -> goodArticle.contains ( Long.parseLong ( g ) ) ).collect ( Collectors.toList ( ) );
+			List < String > errorArticle = new ArrayList < String > ( );
+			 Set< Long >  rightArticle =  new HashSet< Long > ();
+			
+			for ( String goodsToArticle : articleToFile) {
+				try {
+					rightArticle.add (Long.parseLong ( goodsToArticle));
+					} catch ( NumberFormatException n ) {
+						errorArticle.add(goodsToArticle);
+						}
+				}
+			
+			List < String > goodsToFile = new ArrayList < String > ( );
+			
+			List < String > errorArticleToFile = new ArrayList < String > ( );
+			
+			Set < Long > setGoodArticle = ReadFile.getInstance().getListgoods() 
+					.stream ( )
+					.map ( Goods :: getArticle )
+					.collect ( Collectors.toSet ( ) );
 			
 			
-			List < String > errorArticle =
-					Arrays.asList ( articleToFile ).stream ( ).filter ( p -> ! goodArticle.contains ( Long.parseLong ( p ) ) ).collect ( Collectors.toList ( ) );
+			if ( !rightArticle.isEmpty() ) {	
+				
+				goodsToFile = rightArticle
+						 .stream()
+						 .filter(g -> setGoodArticle.contains (  g  ) )
+						 .map(Object::toString)
+						 .collect(Collectors.toList());
+				
+				errorArticleToFile = rightArticle
+						 .stream()
+						 .filter(g -> !setGoodArticle.contains (  g  ) )
+						 .map(Object::toString)
+						 .collect(Collectors.toList());
+				}					
+			
+			
+				
+				errorArticleToFile.addAll( errorArticle );			
+			
+			
 			
 			if ( ! goodsToFile.isEmpty ( ) ) {
 				try {
@@ -76,7 +109,7 @@ public class BuyService extends HttpServlet {
 					response.setStatus ( HttpServletResponse.SC_INTERNAL_SERVER_ERROR );
 				}
 			}
-			if ( ! errorArticle.isEmpty ( ) ) {
+			if ( ! errorArticleToFile.isEmpty ( ) ) {
 				
 				response.setStatus ( HttpServletResponse.SC_BAD_REQUEST );
 				

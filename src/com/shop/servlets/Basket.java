@@ -1,7 +1,11 @@
 package com.shop.servlets;
 
-import com.shop.entity.Goods;
-import com.shop.servise.ReadFile;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -9,12 +13,9 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+
+import com.shop.entity.Goods;
+import com.shop.servise.ReadFile;
 
 
 /**
@@ -36,31 +37,61 @@ public class Basket extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet ( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
-			                                                                                         IOException {
-		
-		ReadFile.getInstance ( );
+			                                                                                         IOException {			
 		
 		String goodsToBuy = request.getParameter ( "items" );
 		if ( goodsToBuy != "" ) {
+			
 			String[] goodsToBuyGet = goodsToBuy.split ( "," );
+			
+			List < String > errorArticleToBuy = new ArrayList < String > ( );
+			Set < Long > rightArticleToBuy = new HashSet< Long > ()   ;
+			
+			for ( String articleToParse : goodsToBuyGet) {
+				try {
+					rightArticleToBuy.add (Long.parseLong ( articleToParse));
+					
+					} catch ( NumberFormatException n ) {
+						errorArticleToBuy.add(articleToParse);
+						}
+				}
+			
 			List < String > goodsToBuyServise = new ArrayList < String > ( );
+			
 			List < String > errorgood = new ArrayList < String > ( );
 			
-			if ( goodsToBuyGet.length != 0 ) {
-				Set < Long > goodArticle =
-						ReadFile.readGoods ( ).stream ( ).map ( Goods :: getArticle ).collect ( Collectors.toSet ( ) );
-				goodsToBuyServise =
-						Arrays.stream ( goodsToBuyGet ).filter ( g -> goodArticle.contains ( Long.parseLong ( g ) ) ).collect ( Collectors.toList ( ) );
-				errorgood =
-						Arrays.stream ( goodsToBuyGet ).filter ( p -> ! goodArticle.contains ( Long.parseLong ( p ) ) ).collect ( Collectors.toList ( ) );
+			Set < Long > setGoodArticle = ReadFile.getInstance().getListgoods() 
+					.stream ( )
+					.map ( Goods :: getArticle )
+					.collect ( Collectors.toSet ( ) );
+			
+			if ( ! rightArticleToBuy.isEmpty() ) {	
 				
-			}
+				 goodsToBuyServise = rightArticleToBuy
+						 .stream()
+						 .filter(g -> setGoodArticle.contains (  g  ) )
+						 .map(Object::toString)
+						 .collect(Collectors.toList());
+				
+				 errorgood = rightArticleToBuy
+						 .stream()
+						 .filter(g -> !setGoodArticle.contains (  g  ) )
+						 .map(Object::toString)
+						 .collect(Collectors.toList());
+				}
+			
+			if ( !errorArticleToBuy.isEmpty() ) {
+				
+				errorgood.addAll( errorArticleToBuy );
+				
+			}						
+			
 			request.setAttribute ( "goodsToBuyServise", goodsToBuyServise );
 			request.setAttribute ( "errorgood", errorgood );
 		}
 		
 		
-		request.setAttribute ( "listGoods", ReadFile.readGoods ( ) );
+		request.setAttribute ( "listGoods", ReadFile.getInstance().getListgoods());
 		
 		RequestDispatcher dispatcher = request.getRequestDispatcher ( "/jsp/basket.jsp" );
 		dispatcher.forward ( request, response );
